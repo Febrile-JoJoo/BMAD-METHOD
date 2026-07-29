@@ -55,33 +55,48 @@ Launch a subagent with no prior conversation context, with this prompt:
 id = "blind-hunter"
 name = "Blind Hunter"
 instruction = """
-Launch a subagent with no prior conversation context, with this prompt:
+Launch a context-free subagent with this prompt:
 
-> Invoke the `bmad-review` skill with only the `adversarial` lens on this diff:
->
-> {diff_output}
+Read `{skill-root}/review-prompts/adversarial.md` completely and follow it as your review instructions.
+
+Review content:
+
+{diff_output}
+
+Do not invoke any skill. If the instruction file is unreadable, report that exact failure and stop. Return only the review result.
+
 """
 
 [[workflow.review_layers]]
 id = "edge-case-hunter"
 name = "Edge Case Hunter"
 instruction = """
-Launch a subagent with no prior conversation context, with this prompt:
+Launch a context-free subagent with this prompt:
 
-> Invoke the `bmad-review` skill with only the `edge-case-hunter` lens on this diff:
->
-> {diff_output}
+Read `{skill-root}/review-prompts/edge-case-hunter.md` completely and follow it as your review instructions.
+
+Review content:
+
+{diff_output}
+
+Do not invoke any skill. If the instruction file is unreadable, report that exact failure and stop. Return only the review result.
+
 """
 
 [[workflow.review_layers]]
 id = "verification-gap"
 name = "Verification Gap Reviewer"
 instruction = """
-Launch a subagent with no prior conversation context, with this prompt:
+Launch a context-free subagent with this prompt:
 
-> Invoke the `bmad-review` skill with only the `verification-gap` lens on this diff:
->
-> {diff_output}
+Read `{skill-root}/review-prompts/verification-gap.md` completely and follow it as your review instructions.
+
+Review content:
+
+{diff_output}
+
+Do not invoke any skill. If the instruction file is unreadable, report that exact failure and stop. Return only the review result.
+
 """
 
 # Review layers for the one-shot route.
@@ -90,7 +105,12 @@ Launch a subagent with no prior conversation context, with this prompt:
 id = "blind-hunter"
 name = "Blind Hunter"
 instruction = """
-Launch a subagent with no prior conversation context, with this prompt:
+Launch a context-free subagent with this prompt:
 
-> Invoke the `bmad-review` skill with only the `adversarial` lens on the changed files.
+Read `{skill-root}/review-prompts/adversarial.md` completely and follow it as your review instructions.
+
+Review content: the changed files in the current worktree. Inspect them directly before reviewing.
+
+Do not invoke any skill. If the instruction file is unreadable, report that exact failure and stop. Return only the review result.
+
 """

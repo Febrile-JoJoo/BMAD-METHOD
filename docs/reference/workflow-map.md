@@ -81,33 +81,29 @@ Decide how to build it and break work into stories.
 
 ## Phase 4: Implementation
 
-Build it, one story at a time. Phase 4 epic and story automation is now available also. So you can choose how you want to stay in the loop. You can choose the full flow, or go right to quick flow.
+Every implementation path converges on `bmad-quick-dev`. It accepts direct intent, an issue, a specification, or a planned story, then chooses the clarification, planning, implementation, and review depth needed for that input.
 
-| Workflow               | Purpose                                                                       | Produces                                             |
-|------------------------|-------------------------------------------------------------------------------|------------------------------------------------------|
-| `bmad-sprint-planning` | Initialize tracking (once per project to sequence the dev cycle)              | `sprint-status.yaml`                                 |
-| `bmad-create-story`    | Prepare next story for implementation                                         | `story-[slug].md`                                    |
-| `bmad-dev-story`       | Implement the story                                                           | Working code + tests                                 |
-| `bmad-code-review`     | Validate implementation quality                                               | Approved or changes requested                        |
-| `bmad-correct-course`  | Handle significant mid-sprint changes                                         | Updated plan or re-routing                           |
-| `bmad-sprint-status`   | Track sprint progress and story status                                        | Sprint status update                                 |
-| `bmad-retrospective`   | Review after epic completion                                                  | Lessons learned                                      |
+| Workflow | Purpose | Produces |
+|----------|---------|----------|
+| `bmad-quick-dev` | Turn direct intent or a planned story into implemented, reviewed code | `spec-*.md` + code |
+| `bmad-sprint-planning` | Initialize tracking (once per project to sequence the dev cycle) | `sprint-status.yaml` |
+| `bmad-code-review` | Ad hoc review of any code change | Findings + applied patches |
+| `bmad-correct-course` | Handle significant mid-sprint changes | Updated plan or re-routing |
+| `bmad-sprint-status` | Track sprint progress and story status | Sprint status update |
+| `bmad-retrospective` | Review after epic completion | Lessons learned |
 
-## Quick Flow (Parallel Track)
+### Direct and Planned Entry
 
-Skip phases 1-3 for small, well-understood work.
+Clear work can enter `bmad-quick-dev` directly. Larger initiatives can first produce a PRD, UX design, architecture, epics, stories, readiness results, and sprint plan. Those artifacts add context; they do not select another implementation workflow.
 
-| Workflow         | Purpose                                                                   | Produces           |
-|------------------|---------------------------------------------------------------------------|--------------------|
-| `bmad-quick-dev` | Unified quick flow — clarify intent, plan, implement, review, and present | `spec-*.md` + code |
-| `bmad-dev-auto`  | Runs one unattended development-loop iteration — small intent in, code out | `spec-*.md` + code |
+`bmad-dev-auto` can orchestrate unattended iterations of the same development model when autonomous execution is appropriate.
 
 For the reference on unattended development loops with `bmad-dev-auto`, see [Autonomous Development Loops](./dev-auto.md).
 
 ## Context Management
 
 Each document becomes context for the next phase. The PRD tells the architect what constraints matter. The architecture
-tells the dev agent which patterns to follow. Story files give focused, complete context for implementation. Without
+tells the dev agent which patterns to follow. Spec files give focused, complete context for implementation. Without
 this structure, agents make inconsistent decisions.
 
 ### Project Context
