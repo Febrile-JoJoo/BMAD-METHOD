@@ -16,24 +16,30 @@ jobs:
     if: github.repository == 'Febrile-JoJoo/BMAD-METHOD'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout fork
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          # Full history so git can find the merge base with upstream.
-          fetch-depth: 0
+      # Plain git only: this repository's Actions policy allows no
+      # third-party actions, not even actions/checkout.
+      - name: Merge upstream main into fork main
+        env:
           # Fine-grained personal access token (repository secret) with
           # Contents: read/write and Workflows: read/write on this fork.
-          token: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
-
-      - name: Merge upstream main
+          SYNC_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+          FORK: ${{ github.repository }}
+          UPSTREAM: bmad-code-org/BMAD-METHOD
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::Repository secret UPSTREAM_SYNC_TOKEN is not set."
+            exit 1
+          fi
 
-          git remote add upstream https://github.com/bmad-code-org/BMAD-METHOD.git
-          git fetch upstream main
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Both repositories are public, so reading needs no token.
+          git clone -q --branch main "https://github.com/${FORK}.git" fork
+          cd fork
+          git remote add upstream "https://github.com/${UPSTREAM}.git"
+          git fetch -q upstream main
 
           if git merge-base --is-ancestor upstream/main HEAD; then
             echo "Already up to date with upstream main."
@@ -48,5 +54,6 @@ jobs:
             exit 1
           fi
 
-          git push origin HEAD:main
+          # Only the push needs the token. Actions masks its value in the logs.
+          git push -q "https://x-access-token:${SYNC_TOKEN}@github.com/${FORK}.git" HEAD:main
           echo "Merged upstream main into fork main."
