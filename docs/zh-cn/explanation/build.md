@@ -11,7 +11,7 @@ sidebar:
 
 当已规划的 story 进入 Build 时，它仍然是产品上下文和验收标准的来源。Build 会为当前运行创建自己的执行记录，使实施决策和审查发现可追溯，但不会取代上游 story。
 
-![Build 工作流图](/diagrams/build-diagram.png)
+![Build 工作流图](/diagrams/build-run.svg)
 
 ## 它解决什么问题
 
@@ -85,8 +85,7 @@ Build 是执行节奏设计；`adversarial review` 是审查策略。二者经�
 
 ## 继续阅读
 
-想进一步理解审查策略，可继续阅读 [对抗性评审](./adversarial-review.md)；需要对已有输出进行第二轮推理时，可参考 [高级启发](./advanced-elicitation.md)。若要查看它在完整流程中的位置，请参见 [工作流地图](../reference/workflow-map.md)。
+需要对已有输出进行第二轮推理时，可参考 [高级启发](./advanced-elicitation.md)。若要查看它在完整流程中的位置，请参见 [工作流地图](../reference/workflow-map.md)。
 
-- [对抗性评审](./adversarial-review.md)
 - [高级启发](./advanced-elicitation.md)
 - [工作流地图](../reference/workflow-map.md)
