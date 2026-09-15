@@ -5,8 +5,10 @@ on:
     - cron: "17 3 * * *"
   workflow_dispatch:
 
+# The automatic GITHUB_TOKEN is not used for the push (it cannot touch
+# .github/workflows/), so it only needs read access here.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   sync:
@@ -14,7 +16,37 @@ jobs:
     if: github.repository == 'Febrile-JoJoo/BMAD-METHOD'
     runs-on: ubuntu-latest
     steps:
-      - name: Sync fork with upstream
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api --method POST "repos/${{ github.repository }}/merge-upstream" -f branch=main
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          # Full history so git can find the merge base with upstream.
+          fetch-depth: 0
+          # Fine-grained personal access token (repository secret) with
+          # Contents: read/write and Workflows: read/write on this fork.
+          token: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+
+      - name: Merge upstream main
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/bmad-code-org/BMAD-METHOD.git
+          git fetch upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Already up to date with upstream main."
+            exit 0
+          fi
+
+          # "[skip ci]" keeps this fork's other workflows (docs deploy,
+          # quality, publish) from running on the merge commit. They are
+          # meant for the upstream repository, not for this fork.
+          if ! git merge --no-ff --no-edit -m "Merge upstream main [skip ci]" upstream/main; then
+            echo "::error::Merge conflict with upstream main. Resolve it manually (for example with the 'Sync fork' button on GitHub)."
+            exit 1
+          fi
+
+          git push origin HEAD:main
+          echo "Merged upstream main into fork main."
