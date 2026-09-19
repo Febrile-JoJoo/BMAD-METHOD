@@ -118,7 +118,6 @@ export default defineConfig({
     }),
     starlight({
       title: 'BMad Method',
-      tagline: 'AI-driven agile development with specialized agents and workflows that scale from bug fixes to enterprise platforms.',
 
       // i18n: locale config from shared module (docs-site/src/lib/locales.mjs)
       defaultLocale: 'root',
@@ -350,6 +349,10 @@ export default defineConfig({
                 'cs-CZ': 'Rozdělit práci na story a sledovat ji',
               },
               slug: 'plan/break-work-into-stories-and-track-it',
+            },
+            {
+              label: 'Help Test v7 Previews',
+              slug: 'plan/help-test-v7-previews',
             },
           ],
         },
