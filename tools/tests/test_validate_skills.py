@@ -10,6 +10,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from helpers import chmod
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = REPO_ROOT / "tools" / "validate_skills.py"
 FIXTURES = REPO_ROOT / "tools" / "tests" / "fixtures" / "validate-skills"
@@ -155,6 +157,14 @@ class ProjectCase(unittest.TestCase):
 
 
 class TestRules(ProjectCase):
+    def test_line_endings_of_another_platform_are_refused(self):
+        other = "\n" if os.linesep == "\r\n" else "\r\n"
+        skill = self.skills / "bmad-foreign"
+        skill.mkdir()
+        content = skill_md("bmad-foreign", "Helps with line endings. Use when the file came from elsewhere.")
+        (skill / "SKILL.md").write_bytes(content.replace("\n", other).encode())
+        self.assertTrue(findings_by_rule(self.findings_for(skill), "SKILL-02"))
+
     def test_skill_01_missing_skill_md(self):
         skill = self.skills / "bmad-empty"
         skill.mkdir()
@@ -258,6 +268,27 @@ class TestRules(ProjectCase):
         )
         self.assertEqual(findings_by_rule(self.findings_for(use_if), "SKILL-06"), [])
 
+    def test_module_record_takes_a_bmod_name_and_the_fixed_description(self):
+        record = {"bmod.toml": '[bmod]\ncode = "cis"\n'}
+        clean = self.add_skill("bmod-cis", skill_md("bmod-cis", vs.RECORD_DESCRIPTION), record)
+        self.assertEqual(self.findings_for(clean), [])
+
+        named = self.add_skill("bmad-cis", skill_md("bmad-cis", vs.RECORD_DESCRIPTION), record)
+        name = findings_by_rule(self.findings_for(named), "SKILL-04")
+        self.assertEqual(len(name), 1)
+        self.assertEqual(name[0]["detail"], 'name "bmad-cis" does not match pattern: /^bmod-[a-z0-9]+(?:-[a-z0-9]+)*$/')
+
+        worded = self.add_skill("bmod-gds", skill_md("bmod-gds", "Game dev module. Use when making games."), record)
+        description = findings_by_rule(self.findings_for(worded), "SKILL-06")
+        self.assertEqual(len(description), 1)
+        self.assertIn("must be exactly", description[0]["detail"])
+
+    def test_bmod_name_is_refused_outside_a_module_record(self):
+        for files in (None, {"bmod.toml": '[skill]\nbmod = "bmod-x"\n'}, {"bmod.toml": "[bmod]\n\n[skill]\n"}):
+            skill = self.add_skill("bmod-thing", skill_md("bmod-thing", vs.RECORD_DESCRIPTION), files)
+            rules = {finding["rule"] for finding in self.findings_for(skill)}
+            self.assertEqual(rules, {"SKILL-04", "SKILL-06"}, files)
+
     def test_skill_07_empty_body_and_unclosed_frontmatter(self):
         empty = self.add_skill(
             "bmad-nobody",
@@ -332,8 +363,8 @@ class TestRules(ProjectCase):
     def test_read_err_on_unreadable_file_continues(self):
         skill = self.valid("bmad-perm", {"secret.md": "ok\n"})
         target = skill / "secret.md"
-        os.chmod(target, 0)
-        self.addCleanup(os.chmod, target, 0o644)
+        chmod(target, 0, deny="RD")
+        self.addCleanup(chmod, target, 0o644)
         findings = findings_by_rule(self.findings_for(skill), "READ-ERR")
         self.assertGreaterEqual(len(findings), 1)
         self.assertEqual(findings[0]["severity"], "MEDIUM")
@@ -460,12 +491,14 @@ class TestCliAndOutput(ProjectCase):
 class TestParsers(unittest.TestCase):
     def test_parse_frontmatter_null_and_empty(self):
         self.assertIsNone(vs.parse_frontmatter("no fence\n"))
-        self.assertEqual(vs.parse_frontmatter("---\n---\nbody\n"), {})
-        self.assertEqual(vs.parse_frontmatter("---\nname: 'quoted'\n---\n"), {"name": "quoted"})
+        self.assertEqual(vs.parse_frontmatter("---\n---\nbody\n".replace("\n", os.linesep)), {})
+        self.assertEqual(
+            vs.parse_frontmatter("---\nname: 'quoted'\n---\n".replace("\n", os.linesep)), {"name": "quoted"}
+        )
 
     def test_parse_frontmatter_multiline_continuation_and_comments(self):
         content = "---\nname: bmad-x\ndescription: line1\n  line2\n# ignored\n  line3\n---\n\nBody\n"
-        fm = vs.parse_frontmatter_multiline(content)
+        fm = vs.parse_frontmatter_multiline(content.replace("\n", os.linesep))
         self.assertEqual(fm["name"], "bmad-x")
         self.assertEqual(fm["description"], "line1\n  line2\n  line3")
 

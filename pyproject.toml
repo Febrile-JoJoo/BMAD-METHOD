@@ -4,7 +4,7 @@
 # `npx skills add bmad-code-org/BMAD-METHOD` and the plugin marketplaces
 # install, and each shipped script under skills/*/scripts declares its own
 # dependencies inline (PEP 723) so `uv run` works without this file.
-# The release version lives in skills/*/module-manifest.toml, not here.
+# The release version lives in [bmod] of each skills/bmod-*/bmod.toml, not here.
 
 [project]
 name = "bmad-method"
@@ -30,6 +30,8 @@ package = false
 [tool.pytest.ini_options]
 addopts = "-q -ra --tb=short -n auto -p no:cacheprovider"
 testpaths = ["tools/tests", "skills"]
+# tools/tests/helpers.py, for the tests under skills/ as well.
+pythonpath = ["tools/tests"]
 
 [tool.ruff]
 # Every shipped script declares the same floor inline (PEP 723) as

@@ -43,9 +43,16 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: validate-manifests
+        name: validate bmod files
+        entry: uv run tools/validate_manifests.py
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: pytest
         name: pytest
-        entry: env PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest
+        # -B prevents Python from writing .pyc files.
+        entry: uv run --frozen python -B -m pytest
         language: system
         pass_filenames: false
         always_run: true
