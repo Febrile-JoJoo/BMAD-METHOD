@@ -32,9 +32,9 @@ If no findings are generated (from either pass), the skill passes validation.
 - **Internal reference**: a file path from one file in the skill to another file in the same skill.
 - **External reference**: a file path from a skill file to a file outside the skill directory.
 - **Originating file**: the file that contains the reference (path resolution is relative to this file's location).
-- **Config value**: a key declared with a `prompt:` in `src/core-skills/module.yaml` or `src/bmm-skills/module.yaml`. The installer writes these to `{project-root}/_bmad/config.toml` (team scope) and `config.user.toml` (user scope); `_bmad/custom/` may override either. Examples: `project_name`, `output_folder`, `communication_language`, `planning_artifacts`, `project_knowledge`.
+- **Config value**: a key declared with a `prompt:` in `src/core-skills/module.yaml` or `src/bmm-skills/module.yaml`. The installer writes these to `{project-root}/_bmad/config.toml` (team scope) and `config.user.toml` (user scope); `_bmad/custom/` may override either. Examples: `project_name`, `output_folder`, `communication_language`, `planning_artifacts`.
 - **Customization value**: a key from the skill's own `customize.toml`, in its `[workflow]` table (most skills) or `[agent]` table (agent skills), layered with `_bmad/custom/<skill-name>.toml` and `.user.toml`.
-- **Runtime variable**: a name-value pair whose value is set during workflow execution (e.g., `spec_file`, `date`, `status`).
+- **Runtime variable**: a name-value pair whose value is set during workflow execution (e.g., `plan_file`, `date`, `status`).
 - **Intra-skill path variable**: a variable whose value is a path to another file within the same skill — this is an anti-pattern.
 - **Rendered skill**: a skill whose `SKILL.md` invokes `render_skill.py`, which renders the skill's Markdown files (entry point `workflow.md`; `SKILL.md` excluded) into an immutable snapshot before execution. Only rendered skills may use render-time expressions. Every other skill interpolates customization values itself at runtime.
 
@@ -166,7 +166,7 @@ Every value reached during the render is part of the generation's identity. Cust
   - CORRECT: `./steps/step-01-gather-context.md` (from a skill-root file into a `steps/` subdirectory)
   - CORRECT: `./step-02-plan.md` (sibling, in the flat step layout or from inside `steps/`)
   - CORRECT: `./template.md` (from SKILL.md to a sibling)
-  - CORRECT: `../spec-template.md` (from `steps/step-01.md` to a skill-root file)
+  - CORRECT: `../plan-template.md` (from `steps/step-01.md` to a skill-root file)
   - CORRECT: `workflow.md` (bare relative filename for sibling)
   - WRONG: `./steps/step-02-review.md` (from a file already inside `steps/` — resolves to `steps/steps/`)
   - WRONG: `{project-root}/.claude/skills/my-skill/template.md`
@@ -188,7 +188,7 @@ Every value reached during the render is part of the generation's identity. Cust
 
 - **Severity:** HIGH
 - **Applies to:** all files in the skill
-- **Rule:** References to files outside the skill directory must use `{project-root}/...` or a config-derived path (e.g., `{planning_artifacts}/...`, `{implementation_artifacts}/...`, `{project_knowledge}/...`).
+- **Rule:** References to files outside the skill directory must use `{project-root}/...` or a config-derived path (e.g., `{planning_artifacts}/...`, `{implementation_artifacts}/...`).
 - **Detection:** Identify file references that point outside the skill. Verify they start with `{project-root}` or a known config key. Flag absolute paths, home-relative paths (`~/`), or bare paths that resolve outside the skill.
 - **Fix:** Replace with `{project-root}/...` or the appropriate config value.
 
@@ -213,7 +213,7 @@ Every value reached during the render is part of the generation's identity. Cust
   - References to pre-conversion locations that were skill directories, where the skill has since moved
 - **Fix:**
   - If the intent is to invoke the other skill: use invoke language in prose — ``Invoke the `skill-name` skill`` (see REF-03).
-  - If the intent is to use a shared resource (template, data file): extract it to a location outside both skills — a config-referenced path such as `{project_knowledge}/...`, or a `file:`-prefixed entry in `customize.toml` — rather than reaching across a skill boundary.
+  - If the intent is to use a shared resource (template, data file): extract it to a location outside both skills — a config-referenced path such as `{planning_artifacts}/...`, or a `file:`-prefixed entry in `customize.toml` — rather than reaching across a skill boundary.
 
 ---
 
@@ -257,7 +257,7 @@ Every value reached during the render is part of the generation's identity. Cust
 
 - **Severity:** HIGH
 - **Applies to:** `.md` files whose name contains `template` (case-insensitive)
-- **Rule:** Template files become artifacts (for example spec files) that are committed and used on other machines. `render_skill.py` would replace a `{{ config.key }}` or `{{ workflow.key }}` expression with a value from the rendering machine, and every artifact produced from the template would carry it.
+- **Rule:** Template files become artifacts (for example plan files) that are committed and used on other machines. `render_skill.py` would replace a `{{ config.key }}` or `{{ workflow.key }}` expression with a value from the rendering machine, and every artifact produced from the template would carry it.
 - **Detection:** Regex `\{\{-?\s*(?:config|workflow)\.[^}]*\}\}` match anywhere in a file whose basename matches `/template/i`.
 - **Fix:** Remove the expression. Use single-curly `{var}` if the value should be resolved at runtime by the consumer of the generated artifact, or plain double-curly `{{var}}` if it is a placeholder the consumer fills in.
 
