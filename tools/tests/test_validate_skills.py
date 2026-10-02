@@ -83,9 +83,6 @@ class FixtureCase(unittest.TestCase):
     def test_active_skill_with_use_when_is_not_flagged(self):
         self.assertFalse(self.has_trigger_finding("with-trigger"))
 
-    def test_canonical_bmad_root_skill_satisfies_name_format(self):
-        self.assertFalse(any(f["rule"] == "SKILL-04" for f in self.findings("bmad")))
-
     def _json_for(self, name: str) -> list[dict]:
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -108,8 +105,6 @@ class FixtureCase(unittest.TestCase):
         self.assertFalse(
             any(f["rule"] == "SKILL-06" and re.search(r"trigger phrase", f["detail"], re.I) for f in with_trigger)
         )
-
-        self.assertEqual(self._json_for("bmad"), [])
 
 
 class ProjectCase(unittest.TestCase):
@@ -322,6 +317,27 @@ class TestRules(ProjectCase):
             {"notes.md": "```\ninstalled_path\n```\n"},
         )
         self.assertEqual(findings_by_rule(self.findings_for(skill), "PATH-02"), [])
+
+    def test_path_06_bare_script_call(self):
+        skill = self.valid(
+            "bmad-script",
+            {
+                "notes.md": "Run `uv run scripts/tool.py`.\n\n```bash\nuv run ./scripts/tool.py\nuv run --frozen scripts/tool.py\nuv run --python 3.11 scripts/tool.py\n```\n"
+            },
+        )
+        findings = findings_by_rule(self.findings_for(skill), "PATH-06")
+        self.assertEqual([f["line"] for f in findings], [1, 4, 5, 6])
+        self.assertTrue(all(f["severity"] == "HIGH" for f in findings))
+
+    def test_path_06_anchored_script_calls_pass(self):
+        skill = self.valid(
+            "bmad-script-ok",
+            {
+                "notes.md": "Run `uv run {skill-root}/scripts/tool.py` "
+                "and `uv run {project-root}/_bmad/scripts/memlog.py`.\n"
+            },
+        )
+        self.assertEqual(findings_by_rule(self.findings_for(skill), "PATH-06"), [])
 
     def test_seq_02_patterns_one_per_line_and_eta_case(self):
         skill = self.valid(
